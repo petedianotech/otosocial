@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { Terminal, Activity, Github, Globe, Code, FileText, CheckCircle2, ArrowRight, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 
-export default function PetedianoAutoDashboard() {
+export default function OtoSocialDashboard() {
   const [currentTime, setCurrentTime] = useState<string>("");
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function PetedianoAutoDashboard() {
       {/* Navbar */}
       <header className="px-6 py-6 flex justify-between items-center max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-3">
-          <div className="font-bold tracking-tight text-xl">Petediano<span className="text-neutral-500">Auto</span></div>
+          <div className="font-bold tracking-tight text-xl">Oto<span className="text-neutral-500">Social</span></div>
         </div>
         <div className="px-4 py-2 bg-white rounded-full shadow-sm text-xs font-semibold tracking-widest text-[#0a0a0a] flex items-center gap-2 border border-neutral-200">
           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse hidden sm:block"></div>
@@ -40,7 +40,7 @@ export default function PetedianoAutoDashboard() {
               Automated.
             </h1>
             <p className="max-w-lg text-lg text-neutral-600 leading-relaxed font-medium">
-              PetedianoAuto is your completely hands-off content engine. Posting high-quality AI and software trends across 4 platforms, 4 times a day.
+              OtoSocial is your completely hands-off content engine. Posting high-quality AI and software trends across 4 platforms, 4 times a day.
             </p>
           </motion.div>
 

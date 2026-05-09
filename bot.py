@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import requests
+import time
 from requests_oauthlib import OAuth1Session
 
 # Set up logging
@@ -54,9 +55,29 @@ def generate_content():
         "generationConfig": {"responseMimeType": "application/json"}
     }
     
-    response = requests.post(url, json=payload)
-    response.raise_for_status()
-    data = response.json()
+    max_retries = 4
+    retry_delay = 5
+    
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            break
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 429:
+                logging.warning(f"Rate limited (429). Retrying in {retry_delay} seconds... (Attempt {attempt+1}/{max_retries})")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                logging.error(f"HTTP Error: {e}")
+                return None
+        except Exception as e:
+            logging.error(f"Request failed: {e}")
+            return None
+    else:
+        logging.error("Max retries exceeded for Gemini API.")
+        return None
     
     try:
         content_text = data['candidates'][0]['content']['parts'][0]['text']
@@ -171,7 +192,7 @@ def post_to_blogger(title, content_html):
         logging.error(f"Blogger Error: {resp.text}")
 
 def main():
-    logging.info("--- Starting PetedianoAuto Execution ---")
+    logging.info("--- Starting OtoSocial Execution ---")
     
     if not GEMINI_API_KEY:
         logging.error("GEMINI_API_KEY is not set. Exiting.")
@@ -209,7 +230,7 @@ def main():
     # 4. Post to Blogger
     post_to_blogger(article_title, article_html)
     
-    logging.info("--- PetedianoAuto Execution Complete ---")
+    logging.info("--- OtoSocial Execution Complete ---")
 
 if __name__ == "__main__":
     main()

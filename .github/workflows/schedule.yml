@@ -1,4 +1,4 @@
-name: PetedianoAuto Autonomous Workflow
+name: OtoSocial Autonomous Workflow
 
 on:
   schedule:
@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run PetedianoAuto Engine
+      - name: Run OtoSocial Engine
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}

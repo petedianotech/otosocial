@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: 'PetedianoAuto | Autonomous AI Poster',
+  title: 'OtoSocial | Autonomous AI Poster',
   description: 'Mission Control for the 24/7 autonomous tech poster',
 };
 
