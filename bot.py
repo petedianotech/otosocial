@@ -80,10 +80,17 @@ def generate_content():
     
     try:
         content_text = data['candidates'][0]['content']['parts'][0]['text']
-        content_json = json.loads(content_text)
+        # Clean up markdown if present
+        if "```json" in content_text:
+            content_text = content_text.split("```json")[1].split("```")[0]
+        elif "```" in content_text:
+            content_text = content_text.split("```")[1].split("```")[0]
+        
+        content_json = json.loads(content_text.strip())
         return content_json
     except (KeyError, TypeError, json.JSONDecodeError) as e:
         logging.error(f"Failed to parse Gemini response: {e}")
+        logging.debug(f"Raw response part: {content_text}")
         return None
 
 def generate_image(prompt):
@@ -140,8 +147,12 @@ def post_to_x(text):
     resp = auth.post(url, json=payload)
     if resp.status_code == 201:
         logging.info("Successfully posted to X.")
+    elif resp.status_code == 401:
+        logging.error("X Error 401: Unauthorized. Your tokens might be invalid or expired.")
+    elif resp.status_code == 403:
+        logging.error("X Error 403: Forbidden. IMPORTANT: Check if your X App has 'Read and Write' permissions and regenerate tokens.")
     else:
-        logging.error(f"X Error: {resp.text}")
+        logging.error(f"X Error {resp.status_code}: {resp.text}")
 
 def post_to_devto(title, body_markdown):
     """Post to Dev.to using API."""
