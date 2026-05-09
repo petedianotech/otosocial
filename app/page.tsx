@@ -72,11 +72,11 @@ export default function OtoSocialDashboard() {
               <div className="space-y-6">
                 <div>
                   <div className="text-sm font-semibold mb-1">Intelligence Platform</div>
-                  <div className="text-sm text-neutral-500">Gemini 3.1 Flash Lite + Imagen 4</div>
+                  <div className="text-sm text-neutral-500">Gemini 3.1 Flash Lite</div>
                 </div>
                 <div>
-                  <div className="text-sm font-semibold mb-1">Live Search Grounding</div>
-                  <div className="text-sm text-emerald-600 font-medium">Enabled (2026 Trends)</div>
+                  <div className="text-sm font-semibold mb-1">Content Mode</div>
+                  <div className="text-sm text-emerald-600 font-medium">Text-Only (Internal Knowledge)</div>
                 </div>
                 <div>
                   <div className="text-sm font-semibold mb-3">Cron Actuations (UTC)</div>

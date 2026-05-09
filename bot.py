@@ -32,27 +32,25 @@ BLOGGER_BLOG_ID = os.environ.get("BLOGGER_BLOG_ID")
 
 
 def generate_content():
-    """Uses Gemini 3.1 Flash Lite with Search Grounding to generate a post and Dev.to article."""
+    """Uses Gemini 3.1 Flash Lite to generate a post and Dev.to article."""
     logging.info("Generating content with Gemini 3.1 Flash Lite...")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key={GEMINI_API_KEY}"
     
     prompt = """
     You are an autonomous AI & Software engineering content creator.
-    Find a trending 2026 AI breakthrough or software development trend.
+    Think of a trending AI breakthrough or software development trend from your internal knowledge.
     Write a concise social media post (for X and LinkedIn) and a full-length Markdown article (for Dev.to and Blogger).
     
     Respond STRICTLY in JSON format:
     {
         "social_post": "The post text (include hashtags)",
         "article_title": "The article title",
-        "article_markdown": "The full markdown article body including code snippets if relevant",
-        "image_prompt": "A prompt for Imagen 4 to generate a relevant cover image"
+        "article_markdown": "The full markdown article body including code snippets if relevant"
     }
     """
     
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "tools": [{"googleSearch": {}}],
         "generationConfig": {"responseMimeType": "application/json"}
     }
     
@@ -207,17 +205,12 @@ def main():
     social_text = content.get('social_post', '')
     article_title = content.get('article_title', '')
     article_md = content.get('article_markdown', '')
-    image_prompt = content.get('image_prompt', '')
     
     logging.info(f"Generated Social Text: {social_text[:50]}...")
     logging.info(f"Generated Article Title: {article_title}")
     
-    # Request Image
-    image_url = generate_image(image_prompt)
-    
-    # For Blogger, we need HTML. Simplistic conversion or we just use Markdown and let the user format or we ask Gemini for HTML.
-    # To keep it simple, we wrap markdown in a pre tag or simple paragraphs.
-    article_html = f"<img src='{image_url}' alt='Cover Image' /><br/><br/>" + article_md.replace("\n", "<br/>")
+    # For Blogger, we need HTML.
+    article_html = article_md.replace("\n", "<br/>")
     
     # 1. Post to LinkedIn
     post_to_linkedin(social_text)
@@ -226,7 +219,7 @@ def main():
     post_to_x(social_text)
     
     # 3. Post to Dev.to
-    post_to_devto(article_title, f"![Cover Image]({image_url})\n\n" + article_md)
+    post_to_devto(article_title, article_md)
     
     # 4. Post to Blogger
     post_to_blogger(article_title, article_html)
