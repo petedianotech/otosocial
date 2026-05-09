@@ -62,35 +62,49 @@ def generate_content():
             response = requests.post(url, json=payload)
             response.raise_for_status()
             data = response.json()
-            break
+            
+            # Content Extraction
+            try:
+                content_text = data['candidates'][0]['content']['parts'][0]['text']
+            except (KeyError, IndexError, TypeError):
+                logging.error(f"Gemini returned an empty or invalid candidate structure: {data}")
+                return None
+
+            # Clean up potential markdown guards if AI ignored responseMimeType
+            cleaned_text = content_text.strip()
+            if cleaned_text.startswith("```"):
+                # Usually ```json ... ```
+                lines = cleaned_text.splitlines()
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                cleaned_text = "\n".join(lines).strip()
+            
+            if not cleaned_text:
+                logging.error("Cleaned text is empty.")
+                return None
+
+            content_json = json.loads(cleaned_text)
+            return content_json
+            
         except requests.exceptions.HTTPError as e:
             if response.status_code == 429:
                 logging.warning(f"Rate limited (429). Retrying in {retry_delay} seconds... (Attempt {attempt+1}/{max_retries})")
                 time.sleep(retry_delay)
-                retry_delay *= 2  # Exponential backoff
+                retry_delay *= 2
             else:
                 logging.error(f"HTTP Error: {e}")
                 return None
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON Parsing Error: {e}")
+            logging.error(f"Raw text attempting to parse: {content_text}")
+            return None
         except Exception as e:
-            logging.error(f"Request failed: {e}")
+            logging.error(f"Unexpected error: {e}")
             return None
     else:
         logging.error("Max retries exceeded for Gemini API.")
-        return None
-    
-    try:
-        content_text = data['candidates'][0]['content']['parts'][0]['text']
-        # Clean up markdown if present
-        if "```json" in content_text:
-            content_text = content_text.split("```json")[1].split("```")[0]
-        elif "```" in content_text:
-            content_text = content_text.split("```")[1].split("```")[0]
-        
-        content_json = json.loads(content_text.strip())
-        return content_json
-    except (KeyError, TypeError, json.JSONDecodeError) as e:
-        logging.error(f"Failed to parse Gemini response: {e}")
-        logging.debug(f"Raw response part: {content_text}")
         return None
 
 def generate_image(prompt):

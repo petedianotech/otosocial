@@ -140,7 +140,16 @@ export default function OtoSocialDashboard() {
                   <p className="mb-1"><strong className="text-neutral-400">Where to find keys:</strong></p>
                   <ul className="list-disc pl-4 space-y-1">
                     <li><strong className="text-neutral-300 font-bold text-white">X (Twitter):</strong> Set App Permissions to <span className="text-emerald-400">"Read and Write"</span>. <br/><span className="text-[10px] text-orange-400 font-bold uppercase mt-1 block tracking-tight">⚠️ CRITICAL: Use the "OAuth 1.0a" Access Tokens. You must REGENERATE them after changing permissions, then update your GitHub Secrets.</span></li>
+                    <li><strong className="text-neutral-300 font-bold text-white">LinkedIn:</strong> 
+                      <ol className="list-decimal pl-4 mt-1 space-y-1 text-[11px]">
+                        <li>Create app at <a href="https://www.linkedin.com/developers/apps" target="_blank" className="text-emerald-500 hover:underline">LinkedIn Developers</a>.</li>
+                        <li>Enable <span className="text-emerald-400">"Share on LinkedIn"</span> in the Products tab.</li>
+                        <li>Use the <a href="https://www.linkedin.com/developers/tools/oauth/token-generator" target="_blank" className="text-emerald-500 hover:underline">Token Generator</a> to get a token with <code className="text-blue-400">w_member_social</code>.</li>
+                        <li>Find your ID via the tool and set URN as <code className="text-blue-400">urn:li:person:ID</code>.</li>
+                      </ol>
+                    </li>
                     <li><strong className="text-neutral-300">Dev.to:</strong> Go to <a href="https://dev.to/settings/extensions" target="_blank" className="text-emerald-500 hover:underline">Settings &gt; Extensions</a> and generate a Forem API Key.</li>
+                    <li><strong className="text-neutral-300">Blogger:</strong> Use <a href="https://developers.google.com/oauthplayground/" target="_blank" className="text-emerald-500 hover:underline">OAuth Playground</a> (Blogger v3) for a quick token.</li>
                   </ul>
                 </div>
               </div>
