@@ -3,6 +3,7 @@ import json
 import logging
 import requests
 import time
+import sys
 from requests_oauthlib import OAuth1Session
 
 # Set up logging
@@ -195,13 +196,13 @@ def main():
     logging.info("--- Starting OtoSocial Execution ---")
     
     if not GEMINI_API_KEY:
-        logging.error("GEMINI_API_KEY is not set. Exiting.")
-        return
+        logging.error("GEMINI_API_KEY is not set in GitHub secrets. Please add it to generate content. Exiting.")
+        sys.exit(1)
         
     content = generate_content()
     if not content:
-        logging.error("No content generated. Exiting.")
-        return
+        logging.error("No content generated due to Gemini AI error. Exiting.")
+        sys.exit(1)
         
     social_text = content.get('social_post', '')
     article_title = content.get('article_title', '')

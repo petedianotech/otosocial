@@ -136,6 +136,13 @@ export default function OtoSocialDashboard() {
                   <div>BLOGGER_ACCESS_TOKEN & BLOGGER_BLOG_ID</div>
                   <div>DEVTO_API_KEY</div>
                 </div>
+                <div className="mt-4 text-xs text-neutral-500">
+                  <p className="mb-1"><strong className="text-neutral-400">Where to find keys:</strong></p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li><strong className="text-neutral-300">X (Twitter):</strong> Requires "Read and Write" app permissions in <a href="https://developer.twitter.com/en/portal/dashboard" target="_blank" className="text-emerald-500 hover:underline">X Developer Portal</a>. (If you change to Read/Write, you MUST regenerate your Access Token).</li>
+                    <li><strong className="text-neutral-300">Dev.to:</strong> Go to <a href="https://dev.to/settings/extensions" target="_blank" className="text-emerald-500 hover:underline">Settings &gt; Extensions</a> and generate a Forem API Key.</li>
+                  </ul>
+                </div>
               </div>
             </div>
 
