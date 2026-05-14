@@ -1,23 +1,40 @@
 "use client";
 
-import { motion } from "motion/react";
-import { Terminal, Activity, Github, Globe, Code, FileText, CheckCircle2, ArrowRight, Settings, Loader2, Play } from "lucide-react";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { 
+  X, 
+  Globe, 
+  PenTool, 
+  Layout, 
+  Sparkles, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2, 
+  Clock, 
+  ChevronRight,
+  Settings,
+  Bell
+} from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 
-export default function OtoSocialDashboard() {
-  const [currentTime, setCurrentTime] = useState<string>("");
+const PlatformIconX = (props: any) => <X {...props} />;
+const PlatformIconLinkedIn = (props: any) => <Globe {...props} />;
+const PlatformIconDevTo = (props: any) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M7.42 10.05c-.18-.16-.46-.23-.84-.23H6.03v2.33h.55c.38 0 .65-.07.84-.23.2-.16.29-.36.29-.61v-.65c0-.25-.1-.45-.29-.61zM18 9h-3v6h3c.55 0 1-.45 1-1V10c0-.55-.45-1-1-1zm-1 4h-1v-2h1v2zm-12.03-4H3c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h2.03c.12 0 .23-.05.31-.14.09-.09.14-.21.14-.36V9.5c0-.28-.22-.5-.5-.5zM11 9H9c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h2c.55 0 1-.45 1-1V10c0-.55-.45-1-1-1zm0 4h-1v-1h1v1zm0-2h-1v-1h1v1z"/>
+  </svg>
+);
+const PlatformIconBlogger = (props: any) => <Layout {...props} />;
+
+export default function OtoSocialApp() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"home" | "settings">("home");
   const [status, setStatus] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC");
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
+    setIsMounted(true);
     fetch('/api/status').then(res => res.json()).then(data => setStatus(data));
   }, []);
 
@@ -28,209 +45,297 @@ export default function OtoSocialDashboard() {
       const res = await fetch('/api/generate', { method: 'POST' });
       const data = await res.json();
       setLastResult(data);
+      setActiveTab("home");
     } catch (e) {
       console.error(e);
-      setLastResult({ success: false, error: "Failed to fetch" });
+      setLastResult({ success: false, error: "Connection lost. Please try again." });
     }
     setIsGenerating(false);
   };
 
+  const platforms = useMemo(() => [
+    { 
+      id: "x", 
+      name: "X (Twitter)", 
+      icon: PlatformIconX, 
+      color: "bg-black text-white",
+      status: status?.x
+    },
+    { 
+      id: "linkedin", 
+      name: "LinkedIn", 
+      icon: PlatformIconLinkedIn, 
+      color: "bg-[#0A66C2] text-white",
+      status: status?.linkedin
+    },
+    { 
+      id: "devto", 
+      name: "Dev.to", 
+      icon: PlatformIconDevTo,
+      color: "bg-gray-800 text-white",
+      status: status?.devto
+    },
+    { 
+      id: "blogger", 
+      name: "Blogger", 
+      icon: PlatformIconBlogger, 
+      color: "bg-[#FF5722] text-white",
+      status: status?.blogger
+    }
+  ], [status]);
+
+  const connectedCount = useMemo(() => status ? platforms.filter(p => p.status).length : 0, [status, platforms]);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-500" size={32} />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#f5f5f4] text-[#0a0a0a] font-sans overflow-x-hidden selection:bg-[#0a0a0a] selection:text-white pb-20">
-      {/* Navbar */}
-      <header className="px-6 py-6 flex justify-between items-center max-w-screen-2xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="font-bold tracking-tight text-xl">Oto<span className="text-neutral-500">Social</span></div>
-        </div>
-        <div className="px-4 py-2 bg-white rounded-full shadow-sm text-xs font-semibold tracking-widest text-[#0a0a0a] flex items-center gap-2 border border-neutral-200">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse hidden sm:block"></div>
-          {currentTime || "SYNCING..."}
-        </div>
-      </header>
-
-      <main className="max-w-screen-xl mx-auto px-6 mt-12 grid grid-cols-1 xl:grid-cols-2 gap-16 items-start">
-        {/* Left pane: Hero & Status */}
-        <div className="space-y-12 xl:space-y-16">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-indigo-500 selection:text-white flex justify-center">
+      <div className="w-full max-w-md bg-white min-h-screen shadow-2xl relative flex flex-col overflow-hidden">
+        
+        <header className="pt-12 pb-4 px-6 flex justify-between items-center bg-white border-b border-slate-100 z-10 relative">
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">OtoSocial</h1>
+            <p className="text-sm text-slate-400 font-medium tracking-wide">Automated Publishing</p>
+          </div>
+          <button 
+             onClick={() => setActiveTab("settings")}
+             className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
           >
-            <h1 className="text-6xl sm:text-7xl md:text-[112px] leading-[0.9] tracking-[-0.04em] font-semibold mb-6 sm:mb-8 text-[#0a0a0a]">
-              Content<br />
-              Automated.
-            </h1>
-            <p className="max-w-lg text-lg text-neutral-600 leading-relaxed font-medium">
-              OtoSocial is your completely hands-off content engine. Posting high-quality AI and software trends across 4 platforms.
-            </p>
-          </motion.div>
+            <Settings size={20} />
+          </button>
+        </header>
 
-          <motion.div 
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.6, delay: 0.2 }}
-             className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-          >
-            <StatusCard platform="LinkedIn" status={status?.linkedin ? "Armed" : "Missing Keys"} isActive={status?.linkedin} />
-            <StatusCard platform="X (Twitter)" status={status?.x ? "Armed" : "Missing Keys"} isActive={status?.x} />
-            <StatusCard platform="Dev.to" status={status?.devto ? "Armed" : "Missing Keys"} isActive={status?.devto} />
-            <StatusCard platform="Blogger" status={status?.blogger ? "Armed" : "Missing Keys"} isActive={status?.blogger} />
-          </motion.div>
-
-          <motion.div 
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.6, delay: 0.3 }}
-             className="bg-white rounded-3xl p-8 border border-neutral-200 shadow-sm relative overflow-hidden"
-          >
-              <div className="absolute -right-4 -bottom-4 opacity-5">
-                 <Settings size={160} />
-              </div>
-              <h3 className="font-bold text-sm tracking-widest uppercase mb-6 flex items-center justify-between text-neutral-400">
-                <span className="flex items-center gap-2"><Activity size={16} /> Engine Control</span>
-              </h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <div className="text-sm font-semibold mb-1">Intelligence Platform</div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-neutral-500">Gemini 2.5 Flash</div>
-                    <div className={`text-xs font-bold px-2 py-1 rounded ${status?.gemini ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                      {status === null ? 'Checking...' : (status.gemini ? 'API Key Set' : 'Missing API Key')}
+        <main className="flex-1 overflow-y-auto pb-24 relative select-none">
+          <AnimatePresence mode="wait">
+            {activeTab === "home" ? (
+              <motion.div 
+                key="home"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-6 space-y-8"
+              >
+                <div className="relative rounded-3xl p-6 bg-gradient-to-br from-indigo-500 to-purple-600 shadow-xl shadow-indigo-200 overflow-hidden text-white">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-400/20 rounded-full blur-xl"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="bg-white/20 backdrop-blur-md p-3 rounded-2xl">
+                        <Sparkles size={24} className="text-white" />
+                      </div>
+                      <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase">
+                        AI Engine Ready
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-100">
-                  <button 
-                    onClick={handleGenerate} 
-                    disabled={isGenerating || !status?.gemini}
-                    className="w-full bg-[#0a0a0a] text-white rounded-xl py-4 flex items-center justify-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-800 transition-colors"
-                  >
-                    {isGenerating ? (
-                       <><Loader2 size={18} className="animate-spin" /> Generating & Posting...</>
-                    ) : (
-                       <><Play size={18} /> Generate New Post Now</>
+                    <h2 className="text-2xl font-bold mb-2">Create Content</h2>
+                    <p className="text-indigo-100 text-sm mb-6 max-w-[250px]">
+                      Trigger your AI to write and publish a new post across your connected platforms instantly.
+                    </p>
+                    
+                    <button 
+                      onClick={handleGenerate}
+                      disabled={isGenerating || !status?.gemini}
+                      className="w-full bg-white text-indigo-600 font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-80 disabled:cursor-not-allowed"
+                    >
+                      {isGenerating ? (
+                        <><Loader2 size={18} className="animate-spin text-indigo-600" /> Generating & Posting...</>
+                      ) : (
+                        <><PenTool size={18} /> Tap to Generate Now</>
+                      )}
+                    </button>
+                    {!status?.gemini && status !== null && (
+                      <p className="text-center text-xs mt-3 text-red-200 font-medium">Missing Gemini API Key. Go to Settings.</p>
                     )}
-                  </button>
-                  <p className="text-xs text-neutral-500 text-center mt-3">This will trigger the AI and instantly post to all armed platforms.</p>
+                  </div>
                 </div>
 
                 {lastResult && (
-                  <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 mt-4 text-xs overflow-hidden">
-                    <div className="font-bold mb-2">Last Run Result:</div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                         <Bell size={18} className="text-indigo-500" /> Recent Activity
+                      </h3>
+                      <span className="text-xs text-slate-400">Just now</span>
+                    </div>
+                    
                     {lastResult.success ? (
-                      <div className="space-y-2">
-                        <div><strong className="text-emerald-600">Success!</strong> Generated title:</div>
-                        <div className="italic text-neutral-600 truncate">"{lastResult.title}"</div>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                           <div><strong>X:</strong> {lastResult.results.x}</div>
-                           <div><strong>LinkedIn:</strong> {lastResult.results.linkedin}</div>
-                           <div><strong>Dev.to:</strong> {lastResult.results.devto}</div>
-                           <div><strong>Blogger:</strong> {lastResult.results.blogger}</div>
+                      <div className="space-y-4">
+                        <div className="bg-slate-50 rounded-2xl p-4">
+                           <p className="text-sm font-medium text-slate-800 line-clamp-2">"{lastResult.title}"</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                           {Object.entries(lastResult.results).map(([plat, res]: any) => (
+                              <div key={plat} className="flex items-center gap-2 text-xs">
+                                <div className={`w-2 h-2 rounded-full ${res === 'Success' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                                <span className="capitalize text-slate-500 font-medium">{plat}:</span>
+                                <span className={res === 'Success' ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold truncate max-w-[80px]'}>
+                                  {res === 'Success' ? 'Ok' : 'Failed'}
+                                </span>
+                              </div>
+                           ))}
                         </div>
                       </div>
                     ) : (
-                      <div className="text-red-500 font-mono break-words">{lastResult.error}</div>
+                      <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-medium">
+                        {lastResult.error}
+                      </div>
                     )}
-                  </div>
+                  </motion.div>
                 )}
-              </div>
-          </motion.div>
 
-        </div>
-
-        {/* Right pane: Setup guide & Action */}
-        <motion.div 
-           initial={{ opacity: 0, x: 20 }}
-           animate={{ opacity: 1, x: 0 }}
-           transition={{ duration: 0.7, delay: 0.1 }}
-           className="bg-[#0a0a0a] text-white rounded-[40px] p-8 sm:p-10 md:p-14 relative"
-        >
-          <div className="mb-10">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">Cloudflare Pages Guide</h2>
-            <p className="text-neutral-400">Deploy this engine to Cloudflare Pages for a robust, scheduled content generator.</p>
-          </div>
-
-          <div className="space-y-10">
-            <div className="flex gap-5 items-start">
-              <div className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center shrink-0 font-bold">1</div>
-              <div>
-                <h4 className="text-lg font-semibold mb-2">Export Code to Cloudflare</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">
-                  Use the 'Export to GitHub' feature, then connect that repository to <strong className="text-white">Cloudflare Pages</strong>. Make sure it detects the framework as Next.js.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-5 items-start">
-              <div className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center shrink-0 font-bold bg-white text-black">2</div>
-              <div>
-                <h4 className="text-lg font-semibold mb-2">Configure Environment Variables</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed mb-4">
-                  In your Cloudflare Pages dashboard (Settings &gt; Environment variables), add the following secrets:
-                </p>
-                <div className="bg-[#111111] border border-neutral-800 rounded-xl p-5 font-mono text-[11px] sm:text-xs text-neutral-300 space-y-1 overflow-x-auto">
-                  <div className="text-emerald-400 font-bold mb-2"># AI Configuration</div>
-                  <div className="mb-4">GEMINI_API_KEY</div>
-                  
-                  <div className="text-blue-400 font-bold mb-2"># LinkedIn</div>
-                  <div>LINKEDIN_ACCESS_TOKEN & LINKEDIN_PERSON_URN</div>
-                  
-                  <div className="text-neutral-400 font-bold mb-2 mt-4"># X (Formerly Twitter)</div>
-                  <div>X_CONSUMER_KEY & X_CONSUMER_SECRET</div>
-                  <div className="mb-4">X_ACCESS_TOKEN & X_ACCESS_TOKEN_SECRET</div>
-                  
-                  <div className="text-orange-400 font-bold mb-2"># Blogger & Dev.to</div>
-                  <div>BLOGGER_ACCESS_TOKEN & BLOGGER_BLOG_ID</div>
-                  <div>DEVTO_API_KEY</div>
+                <div>
+                  <div className="flex justify-between items-end mb-4 px-1">
+                    <h3 className="text-lg font-bold text-slate-800">Connected Platforms</h3>
+                    <span className="text-sm text-slate-500 font-medium">{connectedCount} of 4 Link</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {platforms.map(platform => (
+                       <PlatformCard key={platform.id} platform={platform} />
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-4 text-xs text-neutral-500">
-                  <p className="mb-1"><strong className="text-neutral-400">Where to find keys:</strong></p>
-                  <ul className="list-disc pl-4 space-y-1">
-                    <li><strong className="text-neutral-300 font-bold text-white">X (Twitter):</strong> Set App Permissions to <span className="text-emerald-400">"Read and Write"</span> in developer portal. <br/><span className="text-[10px] text-orange-400 font-bold uppercase mt-1 block tracking-tight">⚠️ CRITICAL: Use the "OAuth 1.0a" Access Tokens. You must REGENERATE them after changing permissions. X Developer Portal callback URL doesn't matter since we use PIN/token.</span></li>
-                    <li><strong className="text-neutral-300 font-bold text-white">LinkedIn:</strong> 
-                      <ol className="list-decimal pl-4 mt-1 space-y-1 text-[11px]">
-                        <li>Create app at LinkedIn Developers. Set OAuth 2.0 Auth Redirect URL to your Cloudflare/Vercel URL.</li>
-                        <li>Enable <span className="text-emerald-400">"Share on LinkedIn"</span> in the Products tab.</li>
-                        <li>Use Token Generator to get token. Set URN as <code className="text-blue-400">urn:li:person:ID</code>.</li>
-                      </ol>
-                    </li>
-                    <li><strong className="text-neutral-300">Dev.to:</strong> Go to Settings &gt; Extensions and generate a Forem API Key.</li>
-                    <li><strong className="text-neutral-300">Blogger:</strong> Use OAuth Playground (Blogger v3) for a token. Provide your Blog ID (found in Blogger URL).</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
 
-            <div className="flex gap-5 items-start">
-              <div className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center shrink-0 font-bold">3</div>
-              <div>
-                <h4 className="text-lg font-semibold mb-2">Setup Cloudflare Cron</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">
-                  In Cloudflare Pages, you can use Cron Triggers by creating a <code className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-300">wrangler.toml</code> file or configuring a third-party ping service (like cron-job.org) to make a POST request to <code className="text-emerald-400">https://your-domain.com/api/generate</code> on your desired schedule.
-                </p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </main>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="p-6 space-y-6"
+              >
+                 <div className="flex items-center gap-4 mb-6">
+                   <button 
+                     onClick={() => setActiveTab("home")}
+                     className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600"
+                   >
+                     <ChevronRight size={20} className="rotate-180" />
+                   </button>
+                   <h2 className="text-2xl font-bold text-slate-800">Platform Link</h2>
+                 </div>
+
+                 <p className="text-slate-500 text-sm leading-relaxed pb-4 border-b border-slate-100">
+                   Provide the necessary API keys in your Cloudflare Pages Dashboard (Environment Variables) to light up these platforms.
+                 </p>
+
+                 <div className="space-y-4">
+                   <SettingsItem 
+                     title="Gemini AI" 
+                     subtitle="Requires GEMINI_API_KEY (Google AI Studio)" 
+                     isConnected={status?.gemini} 
+                   />
+                   <SettingsItem 
+                     title="X (Twitter)" 
+                     subtitle="Need OAuth 1.0a Key & Access Token (v2 API)" 
+                     isConnected={status?.x} 
+                   />
+                   <SettingsItem 
+                     title="LinkedIn" 
+                     subtitle="Needs w_member_social scope & Person URN" 
+                     isConnected={status?.linkedin} 
+                   />
+                   <SettingsItem 
+                     title="Dev.to" 
+                     subtitle="Requires Forem API Key (Settings > Extensions)" 
+                     isConnected={status?.devto} 
+                   />
+                   <SettingsItem 
+                     title="Blogger" 
+                     subtitle="Needs Blogger v3 Token & Blog ID" 
+                     isConnected={status?.blogger} 
+                   />
+                 </div>
+                 
+                 <div className="mt-8 bg-slate-900 text-slate-100 rounded-3xl p-6 space-y-4 shadow-xl">
+                    <h3 className="font-bold flex items-center gap-2 text-indigo-400">
+                      <Layout size={18} /> Cloudflare Pages Setup
+                    </h3>
+                    <div className="text-xs space-y-3 leading-relaxed opacity-90">
+                      <p>1. Export this code to GitHub and connect to <strong className="text-white">Cloudflare Pages</strong>.</p>
+                      <p>2. Set Framework to <strong className="text-white">Next.js</strong>.</p>
+                      <p>3. Add all your API Keys in <strong className="text-white">Settings &gt; Environment Variables</strong>.</p>
+                      <p>4. <strong>For Scheduler:</strong> In Cloudflare, set up a <strong className="text-white">Cron Trigger</strong> (or use cron-job.org) to ping <code className="bg-white/10 px-1 rounded text-indigo-300">/api/generate</code> with a POST request.</p>
+                    </div>
+                 </div>
+
+                 <div className="mt-4">
+                    <h3 className="font-bold text-slate-800 mb-2 px-1">Automated Schedule</h3>
+                    <div className="bg-indigo-50 text-indigo-800 rounded-2xl p-4 text-sm font-medium flex items-center gap-3">
+                       <Clock size={20} className="text-indigo-500" />
+                       <p>Runs automatically via Cloudflare Cron if <span className="bg-indigo-100 px-1 rounded">wrangler.toml</span> is configured.</p>
+                    </div>
+                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+        
+        <nav className="bg-white border-t border-slate-100 px-6 py-4 flex justify-around items-center">
+          <button 
+             onClick={() => setActiveTab("home")}
+             className={`flex flex-col items-center gap-1 w-16 transition-colors ${activeTab === "home" ? "text-indigo-600" : "text-slate-400"}`}
+          >
+             <Layout size={24} className={activeTab === "home" ? "fill-indigo-50 stroke-indigo-600" : ""} />
+             <span className="text-[10px] font-bold">Home</span>
+          </button>
+          <button 
+             onClick={() => setActiveTab("settings")}
+             className={`flex flex-col items-center gap-1 w-16 transition-colors ${activeTab === "settings" ? "text-indigo-600" : "text-slate-400"}`}
+          >
+             <Settings size={24} className={activeTab === "settings" ? "fill-indigo-50 stroke-indigo-600" : ""} />
+             <span className="text-[10px] font-bold">Config</span>
+          </button>
+        </nav>
+
+      </div>
     </div>
   );
 }
 
-function StatusCard({ platform, status, isActive }: { platform: string, status: string, isActive?: boolean }) {
+function PlatformCard({ platform }: { platform: any }) {
+  const Icon = platform.icon;
+  const isOk = platform.status;
+
   return (
-    <div className={`bg-white p-6 rounded-3xl border ${isActive ? 'border-emerald-200' : 'border-neutral-200 opacity-60'} shadow-sm transition-all`}>
-      <div className="flex justify-between items-start mb-6">
-        <Globe size={24} className={isActive ? "text-emerald-500" : "text-neutral-300"} />
-        <div className="flex items-center gap-2">
-          {isActive && <div className="w-2 h-2 rounded-full bg-emerald-500 hidden sm:block"></div>}
-          <span className={`text-[11px] font-bold ${isActive ? 'text-emerald-600' : 'text-neutral-400'} uppercase tracking-widest`}>{status}</span>
+    <div className={`p-4 rounded-3xl border transition-all ${isOk ? 'bg-white border-slate-100 shadow-sm ring-1 ring-slate-100 ring-offset-2 ring-offset-slate-50' : 'bg-slate-50/50 border-transparent opacity-80'} flex flex-col items-start gap-4`}>
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${platform.color} ${isOk ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <h4 className="font-bold text-slate-800 text-sm mb-1">{platform.name}</h4>
+        <div className="flex items-center gap-1 mt-1">
+          {isOk ? (
+            <><CheckCircle2 size={12} className="text-emerald-500" /><span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Linked</span></>
+          ) : (
+            <><XCircle size={12} className="text-slate-400" /><span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unlinked</span></>
+          )}
         </div>
       </div>
-      <div className="font-semibold text-neutral-800">{platform}</div>
     </div>
   );
 }
 
+function SettingsItem({ title, subtitle, isConnected }: { title: string, subtitle: string, isConnected: boolean }) {
+  return (
+    <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+      <div>
+        <h4 className="font-bold text-slate-800">{title}</h4>
+        <p className="text-xs font-medium text-slate-400 mt-0.5">{subtitle}</p>
+      </div>
+      <div className={`px-3 py-1 rounded-full text-xs font-bold ${isConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+        {isConnected ? 'Ready' : 'Pending'}
+      </div>
+    </div>
+  );
+}

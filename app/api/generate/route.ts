@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { TwitterApi } from 'twitter-api-v2';
 
 export async function POST(req: Request) {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
     
     const prompt = `
     You are Peter Damiano, an ambitious Full Stack Developer and AI enthusiast aiming to rank as the #1 software developer in Malawi.
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     Write a compelling, human-sounding, and engaging social media post (for X and LinkedIn) and a highly professional, in-depth Markdown article (for Dev.to and Blogger).
 
     CRITICAL SEO & ENGAGEMENT INSTRUCTIONS:
-    1. Make the article title extremely catchy, punchy, click-worthy, and SEO-optimized. Use trending keywords, ask provocative questions, or use numbers to boost engagement (e.g., "Stop Using X in 2026", "Why I switched to Y", "How to build Z in 10 minutes").
+    1. Make the article title extremely catchy, punchy, click-worthy, and SEO-optimized. Use trending keywords, ask provocative questions, or use numbers to boost engagement.
     2. The title must compel developers to click and read. It must be professional but highly attention-grabbing.
     3. Naturally weave in SEO keywords related to your goals in the article body: "Full Stack Developer", "AI & Future", "Software Developer in Malawi".
 
@@ -29,15 +29,16 @@ export async function POST(req: Request) {
     }
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
+    const model = ai.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      generationConfig: {
         responseMimeType: 'application/json',
       }
     });
 
-    const contentText = response.text;
+    const result = await model.generateContent(prompt);
+    const contentText = result.response.text();
+    
     if (!contentText) {
       throw new Error('No content returned from Gemini');
     }
@@ -45,10 +46,10 @@ export async function POST(req: Request) {
     // Clean up potential markdown guards
     let cleanedText = contentText.trim();
     if (cleanedText.startsWith("```")) {
-      const lines = cleanedText.split('\\n');
+      const lines = cleanedText.split('\n');
       if (lines[0].startsWith("```")) lines.shift();
       if (lines.length > 0 && lines[lines.length - 1].startsWith("```")) lines.pop();
-      cleanedText = lines.join('\\n').trim();
+      cleanedText = lines.join('\n').trim();
     }
 
     const contentJson = JSON.parse(cleanedText);
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
         results.linkedin = `Exception: ${e.message}`;
       }
     } else {
-      results.linkedin = 'Skipped (Missing Credentials)';
+      results.linkedin = 'Skipped';
     }
 
     // 2. X (Twitter)
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
         results.x = `Exception: ${e.message}`;
       }
     } else {
-      results.x = 'Skipped (Missing Credentials)';
+      results.x = 'Skipped';
     }
 
     // 3. Dev.to
@@ -134,7 +135,7 @@ export async function POST(req: Request) {
          results.devto = `Exception: ${e.message}`;
       }
     } else {
-      results.devto = 'Skipped (Missing Credentials)';
+      results.devto = 'Skipped';
     }
 
     // 4. Blogger
@@ -149,7 +150,7 @@ export async function POST(req: Request) {
            body: JSON.stringify({
               "title": articleTitle,
               "content": articleHtml,
-              "labels": ["AI", "Software Development", "2026 Trends"]
+              "labels": ["AI", "Software Development", "Future"]
            })
         });
         results.blogger = bloggerRes.ok ? 'Success' : `Error: ${await bloggerRes.text()}`;
@@ -157,10 +158,10 @@ export async function POST(req: Request) {
         results.blogger = `Exception: ${e.message}`;
       }
     } else {
-      results.blogger = 'Skipped (Missing Credentials)';
+      results.blogger = 'Skipped';
     }
 
-    return NextResponse.json({ success: true, results, title: articleTitle, text: socialText });
+    return NextResponse.json({ success: true, results, title: articleTitle });
 
   } catch (error: any) {
     console.error(error);

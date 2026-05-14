@@ -1,21 +1,22 @@
-import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
-import './globals.css';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./global.css";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'OtoSocial | Autonomous AI Poster',
-  description: 'Mission Control for the 24/7 autonomous tech poster',
+  title: "OtoSocial",
+  description: "Automated Content Engine",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans bg-[#f5f5f4] text-[#0a0a0a] antialiased" suppressHydrationWarning>
-        {children}
-      </body>
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }

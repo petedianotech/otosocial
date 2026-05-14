@@ -3,4 +3,4 @@ compatibility_date = "2024-03-26"
 pages_build_output_dir = ".vercel/output/static"
 
 [triggers]
-crons = ["0 6,10,13,18 * * *"] # Run at 06:00, 10:00, 13:00, 18:00 UTC
+crons = ["0 6,10,13,18 * * *"]
