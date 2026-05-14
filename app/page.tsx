@@ -265,7 +265,7 @@ export default function OtoSocialApp() {
                       <p>1. Export this code to GitHub and connect to <strong className="text-white">Vercel</strong>.</p>
                       <p>2. Set Framework to <strong className="text-white">Next.js</strong>.</p>
                       <p>3. Add all your API Keys in <strong className="text-white">Settings &gt; Environment Variables</strong>.</p>
-                      <p>4. <strong>Note about X Developer Portal:</strong> When asked for a Callback/App URL, use <strong className="text-white">https://peterdamiano.vercel.app</strong></p>
+                      <p>4. <strong>Note about X Developer Portal:</strong> When asked for a Callback/App URL, use <strong className="text-white">https://otosocial.vercel.app</strong> (or <strong className="text-white">https://otosocial.vercel.app/api/auth/callback/twitter</strong> if using standard OAuth flow)</p>
                     </div>
                  </div>
               </motion.div>

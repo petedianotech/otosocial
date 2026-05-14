@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     `;
 
     const model = ai.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3-flash',
       generationConfig: {
         responseMimeType: 'application/json',
       }
