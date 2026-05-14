@@ -32,6 +32,15 @@ export default function OtoSocialApp() {
   const [status, setStatus] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
+  
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [customText, setCustomText] = useState("");
+  const [selectedPlatforms, setSelectedPlatforms] = useState({
+    x: true,
+    linkedin: true,
+    devto: true,
+    blogger: true
+  });
 
   useEffect(() => {
     setIsMounted(true);
@@ -42,9 +51,20 @@ export default function OtoSocialApp() {
     setIsGenerating(true);
     setLastResult(null);
     try {
-      const res = await fetch('/api/generate', { method: 'POST' });
+      const res = await fetch('/api/generate', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isManual: isManualMode,
+          text: customText,
+          platforms: selectedPlatforms
+        })
+      });
       const data = await res.json();
       setLastResult(data);
+      if (isManualMode && data.success) {
+        setCustomText("");
+      }
       setActiveTab("home");
     } catch (e) {
       console.error(e);
@@ -130,27 +150,61 @@ export default function OtoSocialApp() {
                       <div className="bg-white/20 backdrop-blur-md p-3 rounded-2xl">
                         <Sparkles size={24} className="text-white" />
                       </div>
-                      <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase">
-                        AI Engine Ready
+                       <div className="flex bg-black/20 p-1 rounded-lg">
+                        <button onClick={() => setIsManualMode(false)} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${!isManualMode ? 'bg-white text-indigo-600 shadow' : 'text-white hover:bg-white/10'}`}>Auto AI</button>
+                        <button onClick={() => setIsManualMode(true)} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${isManualMode ? 'bg-white text-indigo-600 shadow' : 'text-white hover:bg-white/10'}`}>Manual</button>
                       </div>
                     </div>
-                    <h2 className="text-2xl font-bold mb-2">Create Content</h2>
-                    <p className="text-indigo-100 text-sm mb-6 max-w-[250px]">
-                      Trigger your AI to write and publish a new post across your connected platforms instantly.
-                    </p>
+                    <h2 className="text-2xl font-bold mb-2">{isManualMode ? "Compose Post" : "Create Content"}</h2>
+                    
+                    {isManualMode ? (
+                      <div className="mb-4 space-y-4">
+                        <textarea 
+                          className="w-full bg-white/10 text-white placeholder-indigo-200 border border-white/20 rounded-xl p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-white/50"
+                          rows={4}
+                          placeholder="What's on your mind? (Markdown supported for articles)"
+                          value={customText}
+                          onChange={(e) => setCustomText(e.target.value)}
+                        ></textarea>
+                        <div>
+                          <p className="text-[10px] font-bold text-indigo-100 mb-2 uppercase tracking-wide">Publish To Platforms:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries({ x: "X", linkedin: "LinkedIn", devto: "Dev.to", blogger: "Blogger" }).map(([key, label]) => {
+                              const isPlatConnected = (status as any)?.[key];
+                              return (
+                                <button 
+                                  key={key}
+                                  onClick={() => setSelectedPlatforms(prev => ({...prev, [key]: !prev[key as keyof typeof prev]}))}
+                                  className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-colors ${selectedPlatforms[key as keyof typeof selectedPlatforms] ? 'bg-white text-indigo-600 border-white' : 'bg-transparent text-indigo-100 border-indigo-300/50 opacity-60'}`}
+                                >
+                                  {label} {!isPlatConnected && "⚠️"}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {!status?.gemini && isManualMode && (
+                            <p className="text-[9px] text-indigo-200 mt-2 italic">* Manual mode doesn't require Gemini API key.</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-indigo-100 text-sm mb-6 max-w-[250px]">
+                        Trigger your AI to write and publish a new post across your connected platforms instantly.
+                      </p>
+                    )}
                     
                     <button 
                       onClick={handleGenerate}
-                      disabled={isGenerating || !status?.gemini}
-                      className="w-full bg-white text-indigo-600 font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-80 disabled:cursor-not-allowed"
+                      disabled={isGenerating || (!isManualMode && !status?.gemini) || (isManualMode && !customText.trim())}
+                      className="w-full mt-2 bg-white text-indigo-600 font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-80 disabled:cursor-not-allowed"
                     >
                       {isGenerating ? (
                         <><Loader2 size={18} className="animate-spin text-indigo-600" /> Generating & Posting...</>
                       ) : (
-                        <><PenTool size={18} /> Tap to Generate Now</>
+                        <><PenTool size={18} /> {isManualMode ? "Publish Now" : "Tap to Generate Now"}</>
                       )}
                     </button>
-                    {!status?.gemini && status !== null && (
+                    {!isManualMode && !status?.gemini && status !== null && (
                       <p className="text-center text-xs mt-3 text-red-200 font-medium">Missing Gemini API Key. Go to Settings.</p>
                     )}
                   </div>
@@ -257,15 +311,19 @@ export default function OtoSocialApp() {
                    />
                  </div>
                  
-                 <div className="mt-8 bg-slate-900 text-slate-100 rounded-3xl p-6 space-y-4 shadow-xl">
+                    <div className="mt-8 bg-slate-900 text-slate-100 rounded-3xl p-6 space-y-4 shadow-xl">
                     <h3 className="font-bold flex items-center gap-2 text-indigo-400">
-                      <Layout size={18} /> Vercel Setup
+                      <Layout size={18} /> Vercel & X API Setup
                     </h3>
                     <div className="text-xs space-y-3 leading-relaxed opacity-90">
                       <p>1. Export this code to GitHub and connect to <strong className="text-white">Vercel</strong>.</p>
-                      <p>2. Set Framework to <strong className="text-white">Next.js</strong>.</p>
-                      <p>3. Add all your API Keys in <strong className="text-white">Settings &gt; Environment Variables</strong>.</p>
-                      <p>4. <strong>Note about X Developer Portal:</strong> When asked for a Callback/App URL, use <strong className="text-white">https://otosocial.vercel.app</strong> (or <strong className="text-white">https://otosocial.vercel.app/api/auth/callback/twitter</strong> if using standard OAuth flow)</p>
+                      <p>2. Add all your API Keys in <strong className="text-white">Settings &gt; Environment Variables</strong>.</p>
+                      <p>3. <strong>X (Twitter) Must-Do:</strong> In your X Developer Portal, you <strong>MUST</strong> add the following to <strong>"User authentication settings"</strong>:</p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li><strong>App URL:</strong> <code className="bg-white/10 px-1 rounded text-indigo-300">https://otosocial.vercel.app</code></li>
+                        <li><strong>Callback URL:</strong> <code className="bg-white/10 px-1 rounded text-indigo-300">https://otosocial.vercel.app</code></li>
+                      </ul>
+                      <p className="text-indigo-300 font-medium">⚠️ Without these URLs in X Dev Portal, your keys will return "Invalid" or "Unauthorized".</p>
                     </div>
                  </div>
               </motion.div>
