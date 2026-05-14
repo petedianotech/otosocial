@@ -15,7 +15,7 @@
     "clsx": "latest",
     "lucide-react": "latest",
     "motion": "latest",
-    "next": "15.5.2",
+    "next": "latest",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "tailwind-merge": "latest",

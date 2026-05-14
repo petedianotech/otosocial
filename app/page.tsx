@@ -268,14 +268,6 @@ export default function OtoSocialApp() {
                       <p>4. <strong>Note about X Developer Portal:</strong> When asked for a Callback/App URL, use <strong className="text-white">https://peterdamiano.vercel.app</strong></p>
                     </div>
                  </div>
-
-                 <div className="mt-4">
-                    <h3 className="font-bold text-slate-800 mb-2 px-1">Automated Schedule</h3>
-                     <div className="bg-indigo-50 text-indigo-800 rounded-2xl p-4 text-sm font-medium flex items-center gap-3">
-                       <Clock size={20} className="text-indigo-500" />
-                       <p>Runs automatically via <span className="bg-indigo-100 px-1 rounded">.github/workflows/schedule.yml</span> using GitHub Actions.</p>
-                    </div>
-                 </div>
               </motion.div>
             )}
           </AnimatePresence>
