@@ -1,11 +1,14 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Terminal, Activity, Github, Globe, Code, FileText, CheckCircle2, ArrowRight, Settings } from "lucide-react";
+import { Terminal, Activity, Github, Globe, Code, FileText, CheckCircle2, ArrowRight, Settings, Loader2, Play } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function OtoSocialDashboard() {
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [status, setStatus] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [lastResult, setLastResult] = useState<any>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -13,6 +16,24 @@ export default function OtoSocialDashboard() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    fetch('/api/status').then(res => res.json()).then(data => setStatus(data));
+  }, []);
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setLastResult(null);
+    try {
+      const res = await fetch('/api/generate', { method: 'POST' });
+      const data = await res.json();
+      setLastResult(data);
+    } catch (e) {
+      console.error(e);
+      setLastResult({ success: false, error: "Failed to fetch" });
+    }
+    setIsGenerating(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f5f4] text-[#0a0a0a] font-sans overflow-x-hidden selection:bg-[#0a0a0a] selection:text-white pb-20">
@@ -40,7 +61,7 @@ export default function OtoSocialDashboard() {
               Automated.
             </h1>
             <p className="max-w-lg text-lg text-neutral-600 leading-relaxed font-medium">
-              OtoSocial is your completely hands-off content engine. Posting high-quality AI and software trends across 4 platforms, 4 times a day.
+              OtoSocial is your completely hands-off content engine. Posting high-quality AI and software trends across 4 platforms.
             </p>
           </motion.div>
 
@@ -50,10 +71,10 @@ export default function OtoSocialDashboard() {
              transition={{ duration: 0.6, delay: 0.2 }}
              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
-            <StatusCard platform="LinkedIn" status="Armed" />
-            <StatusCard platform="X (Twitter)" status="Armed" />
-            <StatusCard platform="Dev.to" status="Armed" />
-            <StatusCard platform="Blogger" status="Armed" />
+            <StatusCard platform="LinkedIn" status={status?.linkedin ? "Armed" : "Missing Keys"} isActive={status?.linkedin} />
+            <StatusCard platform="X (Twitter)" status={status?.x ? "Armed" : "Missing Keys"} isActive={status?.x} />
+            <StatusCard platform="Dev.to" status={status?.devto ? "Armed" : "Missing Keys"} isActive={status?.devto} />
+            <StatusCard platform="Blogger" status={status?.blogger ? "Armed" : "Missing Keys"} isActive={status?.blogger} />
           </motion.div>
 
           <motion.div 
@@ -65,28 +86,55 @@ export default function OtoSocialDashboard() {
               <div className="absolute -right-4 -bottom-4 opacity-5">
                  <Settings size={160} />
               </div>
-              <h3 className="font-bold text-sm tracking-widest uppercase mb-6 flex items-center gap-2 text-neutral-400">
-                <Activity size={16} /> Schedule & Engine
+              <h3 className="font-bold text-sm tracking-widest uppercase mb-6 flex items-center justify-between text-neutral-400">
+                <span className="flex items-center gap-2"><Activity size={16} /> Engine Control</span>
               </h3>
               
               <div className="space-y-6">
                 <div>
                   <div className="text-sm font-semibold mb-1">Intelligence Platform</div>
-                  <div className="text-sm text-neutral-500">Gemini 3.1 Flash Lite</div>
-                </div>
-                <div>
-                  <div className="text-sm font-semibold mb-1">Content Mode</div>
-                  <div className="text-sm text-emerald-600 font-medium">Text-Only (Internal Knowledge)</div>
-                </div>
-                <div>
-                  <div className="text-sm font-semibold mb-3">Cron Actuations (UTC)</div>
-                  <div className="flex flex-wrap gap-2 font-mono text-xs text-neutral-600">
-                    <span className="bg-neutral-100 px-3 py-1.5 rounded-md">06:00</span>
-                    <span className="bg-neutral-100 px-3 py-1.5 rounded-md">10:00</span>
-                    <span className="bg-neutral-100 px-3 py-1.5 rounded-md">13:00</span>
-                    <span className="bg-neutral-100 px-3 py-1.5 rounded-md">18:00</span>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-neutral-500">Gemini 2.5 Flash</div>
+                    <div className={`text-xs font-bold px-2 py-1 rounded ${status?.gemini ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                      {status === null ? 'Checking...' : (status.gemini ? 'API Key Set' : 'Missing API Key')}
+                    </div>
                   </div>
                 </div>
+
+                <div className="pt-4 border-t border-neutral-100">
+                  <button 
+                    onClick={handleGenerate} 
+                    disabled={isGenerating || !status?.gemini}
+                    className="w-full bg-[#0a0a0a] text-white rounded-xl py-4 flex items-center justify-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-800 transition-colors"
+                  >
+                    {isGenerating ? (
+                       <><Loader2 size={18} className="animate-spin" /> Generating & Posting...</>
+                    ) : (
+                       <><Play size={18} /> Generate New Post Now</>
+                    )}
+                  </button>
+                  <p className="text-xs text-neutral-500 text-center mt-3">This will trigger the AI and instantly post to all armed platforms.</p>
+                </div>
+
+                {lastResult && (
+                  <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200 mt-4 text-xs overflow-hidden">
+                    <div className="font-bold mb-2">Last Run Result:</div>
+                    {lastResult.success ? (
+                      <div className="space-y-2">
+                        <div><strong className="text-emerald-600">Success!</strong> Generated title:</div>
+                        <div className="italic text-neutral-600 truncate">"{lastResult.title}"</div>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                           <div><strong>X:</strong> {lastResult.results.x}</div>
+                           <div><strong>LinkedIn:</strong> {lastResult.results.linkedin}</div>
+                           <div><strong>Dev.to:</strong> {lastResult.results.devto}</div>
+                           <div><strong>Blogger:</strong> {lastResult.results.blogger}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-red-500 font-mono break-words">{lastResult.error}</div>
+                    )}
+                  </div>
+                )}
               </div>
           </motion.div>
 
@@ -100,35 +148,36 @@ export default function OtoSocialDashboard() {
            className="bg-[#0a0a0a] text-white rounded-[40px] p-8 sm:p-10 md:p-14 relative"
         >
           <div className="mb-10">
-            <h2 className="text-3xl font-bold tracking-tight mb-4">Deployment Guide</h2>
-            <p className="text-neutral-400">The engine goes live as soon as your GitHub repository is configured.</p>
+            <h2 className="text-3xl font-bold tracking-tight mb-4">Cloudflare Pages Guide</h2>
+            <p className="text-neutral-400">Deploy this engine to Cloudflare Pages for a robust, scheduled content generator.</p>
           </div>
 
           <div className="space-y-10">
             <div className="flex gap-5 items-start">
               <div className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center shrink-0 font-bold">1</div>
               <div>
-                <h4 className="text-lg font-semibold mb-2">Export Code to GitHub</h4>
-                <p className="text-neutral-400 text-sm leading-relaxed">Use the Share menu to export this project directly to GitHub. The workflow file (<code className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-300">.github/workflows/schedule.yml</code>) is already generated and included.</p>
+                <h4 className="text-lg font-semibold mb-2">Export Code to Cloudflare</h4>
+                <p className="text-neutral-400 text-sm leading-relaxed">
+                  Use the 'Export to GitHub' feature, then connect that repository to <strong className="text-white">Cloudflare Pages</strong>. Make sure it detects the framework as Next.js.
+                </p>
               </div>
             </div>
 
             <div className="flex gap-5 items-start">
               <div className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center shrink-0 font-bold bg-white text-black">2</div>
               <div>
-                <h4 className="text-lg font-semibold mb-2">Configure Repository Secrets</h4>
+                <h4 className="text-lg font-semibold mb-2">Configure Environment Variables</h4>
                 <p className="text-neutral-400 text-sm leading-relaxed mb-4">
-                  AI Studio injects your Gemini keys into previews automatically. However, for GitHub Actions to run autonomously, you <strong>MUST</strong> add these to your GitHub repo settings (Settings &gt; Secrets and variables &gt; Actions):
+                  In your Cloudflare Pages dashboard (Settings &gt; Environment variables), add the following secrets:
                 </p>
                 <div className="bg-[#111111] border border-neutral-800 rounded-xl p-5 font-mono text-[11px] sm:text-xs text-neutral-300 space-y-1 overflow-x-auto">
                   <div className="text-emerald-400 font-bold mb-2"># AI Configuration</div>
                   <div className="mb-4">GEMINI_API_KEY</div>
                   
                   <div className="text-blue-400 font-bold mb-2"># LinkedIn</div>
-                  <div>LINKEDIN_ACCESS_TOKEN</div>
-                  <div className="mb-4">LINKEDIN_PERSON_URN</div>
+                  <div>LINKEDIN_ACCESS_TOKEN & LINKEDIN_PERSON_URN</div>
                   
-                  <div className="text-neutral-400 font-bold mb-2"># X (Formerly Twitter)</div>
+                  <div className="text-neutral-400 font-bold mb-2 mt-4"># X (Formerly Twitter)</div>
                   <div>X_CONSUMER_KEY & X_CONSUMER_SECRET</div>
                   <div className="mb-4">X_ACCESS_TOKEN & X_ACCESS_TOKEN_SECRET</div>
                   
@@ -139,17 +188,16 @@ export default function OtoSocialDashboard() {
                 <div className="mt-4 text-xs text-neutral-500">
                   <p className="mb-1"><strong className="text-neutral-400">Where to find keys:</strong></p>
                   <ul className="list-disc pl-4 space-y-1">
-                    <li><strong className="text-neutral-300 font-bold text-white">X (Twitter):</strong> Set App Permissions to <span className="text-emerald-400">"Read and Write"</span>. <br/><span className="text-[10px] text-orange-400 font-bold uppercase mt-1 block tracking-tight">⚠️ CRITICAL: Use the "OAuth 1.0a" Access Tokens. You must REGENERATE them after changing permissions, then update your GitHub Secrets.</span></li>
+                    <li><strong className="text-neutral-300 font-bold text-white">X (Twitter):</strong> Set App Permissions to <span className="text-emerald-400">"Read and Write"</span> in developer portal. <br/><span className="text-[10px] text-orange-400 font-bold uppercase mt-1 block tracking-tight">⚠️ CRITICAL: Use the "OAuth 1.0a" Access Tokens. You must REGENERATE them after changing permissions. X Developer Portal callback URL doesn't matter since we use PIN/token.</span></li>
                     <li><strong className="text-neutral-300 font-bold text-white">LinkedIn:</strong> 
                       <ol className="list-decimal pl-4 mt-1 space-y-1 text-[11px]">
-                        <li>Create app at <a href="https://www.linkedin.com/developers/apps" target="_blank" className="text-emerald-500 hover:underline">LinkedIn Developers</a>.</li>
+                        <li>Create app at LinkedIn Developers. Set OAuth 2.0 Auth Redirect URL to your Cloudflare/Vercel URL.</li>
                         <li>Enable <span className="text-emerald-400">"Share on LinkedIn"</span> in the Products tab.</li>
-                        <li>Use the <a href="https://www.linkedin.com/developers/tools/oauth/token-generator" target="_blank" className="text-emerald-500 hover:underline">Token Generator</a> to get a token with <code className="text-blue-400">w_member_social</code>.</li>
-                        <li>Find your ID via the tool and set URN as <code className="text-blue-400">urn:li:person:ID</code>.</li>
+                        <li>Use Token Generator to get token. Set URN as <code className="text-blue-400">urn:li:person:ID</code>.</li>
                       </ol>
                     </li>
-                    <li><strong className="text-neutral-300">Dev.to:</strong> Go to <a href="https://dev.to/settings/extensions" target="_blank" className="text-emerald-500 hover:underline">Settings &gt; Extensions</a> and generate a Forem API Key.</li>
-                    <li><strong className="text-neutral-300">Blogger:</strong> Use <a href="https://developers.google.com/oauthplayground/" target="_blank" className="text-emerald-500 hover:underline">OAuth Playground</a> (Blogger v3) for a quick token.</li>
+                    <li><strong className="text-neutral-300">Dev.to:</strong> Go to Settings &gt; Extensions and generate a Forem API Key.</li>
+                    <li><strong className="text-neutral-300">Blogger:</strong> Use OAuth Playground (Blogger v3) for a token. Provide your Blog ID (found in Blogger URL).</li>
                   </ul>
                 </div>
               </div>
@@ -158,26 +206,12 @@ export default function OtoSocialDashboard() {
             <div className="flex gap-5 items-start">
               <div className="w-10 h-10 rounded-full border border-neutral-700 flex items-center justify-center shrink-0 font-bold">3</div>
               <div>
-                <h4 className="text-lg font-semibold mb-2">Engage Autopilot</h4>
+                <h4 className="text-lg font-semibold mb-2">Setup Cloudflare Cron</h4>
                 <p className="text-neutral-400 text-sm leading-relaxed">
-                  Once secrets are in place, your GitHub Action will trigger precisely at 6AM, 10AM, 1PM, and 6PM UTC.
+                  In Cloudflare Pages, you can use Cron Triggers by creating a <code className="bg-neutral-800 px-1 py-0.5 rounded text-neutral-300">wrangler.toml</code> file or configuring a third-party ping service (like cron-job.org) to make a POST request to <code className="text-emerald-400">https://your-domain.com/api/generate</code> on your desired schedule.
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="mt-12 pt-10 border-t border-neutral-800">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-               <div className="flex items-center gap-3">
-                 <FileText size={16} className="text-neutral-500" />
-                 <span className="text-xs uppercase tracking-widest font-semibold text-neutral-500">System Verified</span>
-               </div>
-               <span className="text-xs text-neutral-500 bg-neutral-900 px-3 py-1 rounded-full w-fit">Production Ready</span>
-            </div>
-            <button className="w-full bg-white text-[#0a0a0a] rounded-full py-4 px-6 font-bold flex items-center justify-between hover:scale-[1.02] transition-transform duration-300">
-              <span>Export to GitHub</span>
-              <ArrowRight size={20} />
-            </button>
           </div>
         </motion.div>
       </main>
@@ -185,17 +219,18 @@ export default function OtoSocialDashboard() {
   );
 }
 
-function StatusCard({ platform, status }: { platform: string, status: string }) {
+function StatusCard({ platform, status, isActive }: { platform: string, status: string, isActive?: boolean }) {
   return (
-    <div className="bg-white p-6 rounded-3xl border border-neutral-200 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`bg-white p-6 rounded-3xl border ${isActive ? 'border-emerald-200' : 'border-neutral-200 opacity-60'} shadow-sm transition-all`}>
       <div className="flex justify-between items-start mb-6">
-        <Globe size={24} className="text-neutral-300" />
+        <Globe size={24} className={isActive ? "text-emerald-500" : "text-neutral-300"} />
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 hidden sm:block"></div>
-          <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">{status}</span>
+          {isActive && <div className="w-2 h-2 rounded-full bg-emerald-500 hidden sm:block"></div>}
+          <span className={`text-[11px] font-bold ${isActive ? 'text-emerald-600' : 'text-neutral-400'} uppercase tracking-widest`}>{status}</span>
         </div>
       </div>
       <div className="font-semibold text-neutral-800">{platform}</div>
     </div>
   );
 }
+
