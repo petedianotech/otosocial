@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       const lines = text.trim().split('\n');
       articleTitle = lines[0].length > 60 ? lines[0].substring(0, 57) + "..." : lines[0];
     } else {
-      const geminiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      let geminiKey = (process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || "").trim();
       
       if (!geminiKey) {
         throw new Error("Gemini API Key is missing. Please set GEMINI_API_KEY or NEXT_PUBLIC_GEMINI_API_KEY in Vercel settings.");
@@ -56,14 +56,20 @@ export async function POST(req: Request) {
       }
       `;
 
+      // The user insisted on Gemini 3.1 flash-light or Gemini 3 flash.
       const modelName = 'gemini-3.1-flash-light';
       
-      const model = ai.getGenerativeModel({ 
-        model: modelName,
-        generationConfig: {
-          responseMimeType: 'application/json',
-        }
-      });
+      let model;
+      try {
+        model = ai.getGenerativeModel({ 
+          model: modelName,
+          generationConfig: {
+            responseMimeType: 'application/json',
+          }
+        });
+      } catch (me: any) {
+        throw new Error(`Failed to initialize model ${modelName}: ${me.message}`);
+      }
 
       const result = await model.generateContent(promptText);
       const contentText = result.response.text();
