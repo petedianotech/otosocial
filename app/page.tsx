@@ -226,7 +226,7 @@ export default function OtoSocialApp() {
                  </div>
 
                  <p className="text-slate-500 text-sm leading-relaxed pb-4 border-b border-slate-100">
-                   Provide the necessary API keys in your Cloudflare Pages Dashboard (Environment Variables) to light up these platforms.
+                   Provide the necessary API keys in your Vercel Dashboard (Environment Variables) to light up these platforms.
                  </p>
 
                  <div className="space-y-4">
@@ -259,21 +259,21 @@ export default function OtoSocialApp() {
                  
                  <div className="mt-8 bg-slate-900 text-slate-100 rounded-3xl p-6 space-y-4 shadow-xl">
                     <h3 className="font-bold flex items-center gap-2 text-indigo-400">
-                      <Layout size={18} /> Cloudflare Pages Setup
+                      <Layout size={18} /> Vercel Setup
                     </h3>
                     <div className="text-xs space-y-3 leading-relaxed opacity-90">
-                      <p>1. Export this code to GitHub and connect to <strong className="text-white">Cloudflare Pages</strong>.</p>
+                      <p>1. Export this code to GitHub and connect to <strong className="text-white">Vercel</strong>.</p>
                       <p>2. Set Framework to <strong className="text-white">Next.js</strong>.</p>
                       <p>3. Add all your API Keys in <strong className="text-white">Settings &gt; Environment Variables</strong>.</p>
-                      <p>4. <strong>For Scheduler:</strong> In Cloudflare, set up a <strong className="text-white">Cron Trigger</strong> (or use cron-job.org) to ping <code className="bg-white/10 px-1 rounded text-indigo-300">/api/generate</code> with a POST request.</p>
+                      <p>4. <strong>Note about X Developer Portal:</strong> When asked for a Callback/App URL, use <strong className="text-white">https://peterdamiano.vercel.app</strong></p>
                     </div>
                  </div>
 
                  <div className="mt-4">
                     <h3 className="font-bold text-slate-800 mb-2 px-1">Automated Schedule</h3>
-                    <div className="bg-indigo-50 text-indigo-800 rounded-2xl p-4 text-sm font-medium flex items-center gap-3">
+                     <div className="bg-indigo-50 text-indigo-800 rounded-2xl p-4 text-sm font-medium flex items-center gap-3">
                        <Clock size={20} className="text-indigo-500" />
-                       <p>Runs automatically via Cloudflare Cron if <span className="bg-indigo-100 px-1 rounded">wrangler.toml</span> is configured.</p>
+                       <p>Runs automatically via <span className="bg-indigo-100 px-1 rounded">.github/workflows/schedule.yml</span> using GitHub Actions.</p>
                     </div>
                  </div>
               </motion.div>

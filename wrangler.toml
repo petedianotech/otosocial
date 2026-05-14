@@ -1,6 +1,0 @@
-name = "otosocial"
-compatibility_date = "2024-03-26"
-pages_build_output_dir = ".vercel/output/static"
-
-[triggers]
-crons = ["0 6,10,13,18 * * *"]
